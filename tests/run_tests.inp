@@ -1,0 +1,156 @@
+set verbose off
+clear
+
+string wd = "/home/at/git/StoreMatrixAsCsv"
+set workdir @wd
+include "./src/StoreMatrixAsCsv.inp"
+
+
+if search_for_csv_and_add("foo.csv") != "foo.csv"
+    stop
+endif
+
+if search_for_csv_and_add("csv.csv") != "csv.csv"
+    stop
+endif
+
+if search_for_csv_and_add("foo") != "foo.csv"
+    stop
+endif
+
+if search_for_csv_and_add("foo.CSV") != "foo.csv"
+    stop
+endif
+
+if search_for_csv_and_add("{].CSV") != "{].csv"
+    stop
+endif
+
+if add_non_existing_file_type("foo") != "foo.csv"
+    stop
+endif
+
+if add_non_existing_file_type("foo.csv") != "foo.csv"
+    stop
+endif
+
+if add_non_existing_file_type("csv") != "csv.csv"
+    stop
+endif
+
+if valid_matrix(zeros(0,0)) != 0
+    stop
+endif
+
+if valid_matrix(zeros(1,1)) != 1
+    stop
+endif
+
+
+if valid_filename(".csv") != 0
+    stop
+endif
+
+if valid_filename("") != 0
+    stop
+endif
+
+if valid_filename("___/") != 1
+    stop
+endif
+
+
+
+scalar n_rows = 3
+scalar n_cols = 3
+matrix m = mshape(seq(1,9), n_rows, n_cols)
+cnameset(m, "A B C")
+strings rnam = array(n_rows)
+loop i=1..n_rows -q
+    rnam[i] = sprintf("R%d", $i)
+endloop
+rnameset(m, rnam)
+m[1,1] = NA
+StoreMatrixAsCsv(m, "foo.csv")
+open "foo.csv" -p -q
+
+if nelem(dataset) != 4
+    stop
+endif
+
+if $nobs != 3
+    stop
+endif
+if nobs(A) != 2
+    stop
+endif
+if nobs(B) != 3
+    stop
+endif
+
+
+if varnames(dataset)[1] != "row_labels"
+    stop
+endif
+if varnames(dataset)[2] != "A"
+    stop
+endif
+if varnames(dataset)[3] != "B"
+    stop
+endif
+if varnames(dataset)[4] != "C"
+    stop
+endif
+    
+
+
+if nelem(strvals(row_labels)) != 3
+    stop
+endif
+
+if strvals(row_labels)[1] != "R1"
+    stop
+endif
+if strvals(row_labels)[2] != "R2"
+    stop
+endif
+if strvals(row_labels)[3] != "R3"
+    stop
+endif
+
+if sum(A) != 5
+    stop
+endif
+if sum(B) != 15
+    stop
+endif
+if sum(C) != 24
+    stop
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

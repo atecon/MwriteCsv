@@ -1,28 +1,54 @@
-function void StoreMatrixAsCsv (const matrix m,
-                             string filename "Path+filename",
-                             const bool row_labels_to_column[1] "Write row labels to 1st column",
-                             const string delimiter[null] "Column separator: ',' or ';' (default ',')",
-                             const bool verbose[1])
+function scalar StoreMatrixAsCsv (const matrix m,
+                                  string filename "Path+filename",
+                                  const bool row_labels_to_column[1] "Write row labels to 1st column",
+                                  const string delimiter[null] "Column separator: ',' or ';' (default ',')",
+                                  const bool verbose[1])
     /* Writes matrix m to a csv file. */
+    
+    if !valid_filename(filename) || !valid_matrix(m)
+        return 1
+    endif
 
-    string filename = search_for_csv_and_add(filename)
+    string filename = add_non_existing_file_type(filename)
     strings col_labels = cnameget(m)
     strings row_labels = rnameget(m)
-    scalar has_row_labels = strlen(flatten(row_labels, 1))		# number of chars in row-names
-    scalar print_row_labels = 0
-    print_row_labels = (row_labels_to_column==1 && has_row_labels>1)
+    
     if !exists(delimiter)
         string delimiter = ","
     endif
 
-    write_header(col_labels, print_row_labels, delimiter, filename)
-    write_values(m, col_labels, row_labels, print_row_labels, delimiter, filename)
+    write_header(col_labels, row_labels, delimiter, filename)
+    write_values(m, row_labels, delimiter, filename)
+    
+    return 0
 end function
 
 
-function string search_for_csv_and_add (string filename)
+function scalar valid_matrix (const matrix m)
+    if rows(m) == 0 || cols(m) == 0
+        printf "\nError: Empty matrix provided.\n"
+        return 0
+    else
+        return 1
+    endif
+end function
+
+
+function scalar valid_filename (const string filename)
+    if strlen(filename) == 0 || filename == ".csv"
+        printf "\nError: Invalid filename.\n"
+        return 0
+    else
+        return 1
+    endif
+end function
+
+
+function string add_non_existing_file_type (string filename)
 /* Search for file type '.csv' in filename. If not found,
       add '.csv' to string filename. */
+
+    string filename = tolower(filename)
 
     search_for_csv = strlen(strstr(filename, ".csv"))
     if search_for_csv == 4			# found '.csv' in filename
@@ -35,9 +61,7 @@ end function
 
 
 function void write_values (const matrix m,
-                            const strings col_labels,
                             const strings row_labels,
-                            const bool print_row_labels,
                             const string delimiter,
                             const string filename)
     /* Write row labels of input matrix to additional column
@@ -46,12 +70,12 @@ function void write_values (const matrix m,
     scalar n_rows = rows(m)
     scalar n_cols = cols(m)
 
-    cnameset(m, "")
+    cnameset(m, "")			# necessary reset of colum names
 
     catch outfile @filename --append --quiet
 
         loop row_loop=1..n_rows -q
-            if print_row_labels
+            if nelem(row_labels) > 0
                 printf "%s%s ", row_labels[row_loop], delimiter
             endif
 
@@ -64,7 +88,7 @@ end function
 
 
 function void write_header (const strings col_labels,
-                            const bool print_row_labels,
+                            const strings row_labels,
                             const string delimiter,
                             const string filename)
     /* Write column labels as headers into a string. */
@@ -74,7 +98,7 @@ function void write_header (const strings col_labels,
     outfile @filename --quiet
 
         if c > 0
-            if print_row_labels
+            if nelem(row_labels) > 0
                 printf "row_labels%s ", delimiter
             endif
 
