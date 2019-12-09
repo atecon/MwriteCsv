@@ -1,0 +1,11 @@
+author = Artur Tarassow
+email = atecon@posteo.de
+version = 0.5
+date = 2019-12-10
+description = Write matrix to csv
+tags = C81
+min-version = 2018a
+data-requirement = no-data-ok
+public = StoreMatrixAsCsv
+help = StoreMatrixAsCsv_help.txt
+sample-script = StoreMatrixAsCsv_sample.inp

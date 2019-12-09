@@ -6,23 +6,23 @@ set workdir @wd
 include "./src/StoreMatrixAsCsv.inp"
 
 
-if search_for_csv_and_add("foo.csv") != "foo.csv"
+if add_non_existing_file_type("foo.csv") != "foo.csv"
     stop
 endif
 
-if search_for_csv_and_add("csv.csv") != "csv.csv"
+if add_non_existing_file_type("csv.csv") != "csv.csv"
     stop
 endif
 
-if search_for_csv_and_add("foo") != "foo.csv"
+if add_non_existing_file_type("foo") != "foo.csv"
     stop
 endif
 
-if search_for_csv_and_add("foo.CSV") != "foo.csv"
+if add_non_existing_file_type("foo.CSV") != "foo.csv"
     stop
 endif
 
-if search_for_csv_and_add("{].CSV") != "{].csv"
+if add_non_existing_file_type("{].CSV") != "{].csv"
     stop
 endif
 

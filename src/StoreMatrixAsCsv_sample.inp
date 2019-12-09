@@ -1,6 +1,8 @@
 set verbose off
 clear
 
+include StoreMatrixAsCsv.gfn
+
 scalar n_rows = 5
 matrix m = mnormal(n_rows, 5)
 cnameset(m, "A B C D E")
