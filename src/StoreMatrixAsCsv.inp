@@ -1,8 +1,6 @@
 function scalar StoreMatrixAsCsv (const matrix m,
                                   string filename "Path+filename",
-                                  const bool row_labels_to_column[1] "Write row labels to 1st column",
-                                  const string delimiter[null] "Column separator: ',' or ';' (default ',')",
-                                  const bool verbose[1])
+                                  const string delimiter[null] "Column separator: ',' or ';' (default ',')")
     /* Writes matrix m to a csv file. */
     
     if !valid_filename(filename) || !valid_matrix(m)
