@@ -10,4 +10,4 @@ jobs:
     - name: github-action-tester
       uses: skx/github-action-tester@release-0.10
       with:
-        script: ../run_tests.sh
+        script: ./run_test.sh
