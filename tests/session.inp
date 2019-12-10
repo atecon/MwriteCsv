@@ -1,0 +1,2 @@
+run "/home/at/git/StoreMatrixAsCsv/tests/run_tests.inp"
+run run_tests.inp
