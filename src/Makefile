@@ -18,5 +18,5 @@ $(PKG).gfn: $(PKG).inp $(PKG).spec $(PKG)_help.txt $(PKG)_sample.inp
 install: $(PKG).gfn
 	echo pkg install $(PKG).gfn --local | gretlcli -b -
 
-clean:
-	rm -f $(PKG).zip
+#clean:
+#	rm -f $(PKG).zip

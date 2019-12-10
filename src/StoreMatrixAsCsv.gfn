@@ -21,7 +21,7 @@ The output file will be written in the currently set workdir, unless the filenam
 Output:		integer
 Arguments:	X (matrix)
 		filename (string)
-		delimiter (string, either ',' or ';', default ';')
+		delimiter (string, either ';' or ';', default ',')
 -----------------------------------------------
 
 Changelog:
