@@ -2,7 +2,7 @@
 
 DIR=$(dirname $(realpath "$0")) 	# locate folder where this sh-script is located in
 SCRIPT="./tests/run_tests.inp"
-PROJECT="StoreMatrixAsCsv"
+PROJECT="MwriteCsv"
 
 cd $DIR
 echo "Switched to ${DIR}"
