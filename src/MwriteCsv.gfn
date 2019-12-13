@@ -12,17 +12,18 @@ Written by Artur Tarassow (please ask questions and report bugs on the gretl mai
 Source code and test script(s) can be found here:
 https://github.com/atecon/MwriteCsv
 
-Writes the matrix X to a csv-file named filename. In case matrix X comprises column labels, these will be treated as header column labels. If matrix X comprises row labels, these will be added as a string valued column at the first position in case no column with the header 'date' or 'obs' exists, otherwise at the second position.
+Writes the matrix X to a csv-file named filename. In case matrix X comprises column labels, these will be treated as header column labels.
+If matrix X comprises column and row labels, the latter will be added as a string-valued column at the last position.
 
 If a file filename already exists, it will be overwritten. The return value is 0 on successful completion; if an error occurs, such as the file being unwritable, the return value will be non-zero.
 
-The output file will be written in the currently set workdir, unless the filename string contains a full path specification.
+The output file will be written in the currently set &quot;workdir&quot;, unless the filename string contains a full path specification.
 
 Output:		integer
 Arguments:	X (matrix)
-		filename (string)
-		delimiter (string, either ',' or ';', default ';')
-----------------------------------------------------------------------
+			filename (string)
+			delimiter (string, either ',' or ';', default ';')
+---------------------------------------------------------------
 
 Changelog:
 - v0.5, December 2019:
@@ -49,7 +50,7 @@ if !exists(delimiter)
   string delimiter = &quot;;&quot;
 endif
 write_header(col_labels, row_labels, delimiter, filename)
-write_values(m, row_labels, delimiter, filename)
+write_values(m, col_labels, row_labels, delimiter, filename)
 return 0
 </code>
 </gretl-function>
@@ -94,8 +95,9 @@ endif
 </code>
 </gretl-function>
 <gretl-function name="write_values" type="void" private="1">
- <params count="4">
+ <params count="5">
   <param name="m" type="matrix" const="true"/>
+  <param name="col_labels" type="strings" const="true"/>
   <param name="row_labels" type="strings" const="true"/>
   <param name="delimiter" type="string" const="true"/>
   <param name="filename" type="string" const="true"/>
@@ -105,12 +107,14 @@ endif
 (positioned last). */
 scalar n_rows = rows(m)
 scalar n_cols = cols(m)
+scalar with_labels = (nelem(row_labels)&gt;0 &amp;&amp; nelem(col_labels) &gt; 0)
 cnameset(m, &quot;&quot;)			# necessary reset of colum names
 catch outfile @filename --append --quiet
   loop row_loop=1..n_rows -q
     string s = strstrip(sprintf(&quot;%16.10g&quot;, m[row_loop,]))
-    printf &quot;%s%s&quot;,  regsub(s, &quot;\s+&quot;, delimiter), delimiter
-    if nelem(row_labels) &gt; 0
+    printf &quot;%s&quot;,  regsub(s, &quot;\s+&quot;, delimiter)
+    if with_labels
+      printf &quot;%s&quot;, delimiter
       printf &quot;%s&quot;, row_labels[row_loop]
     endif
     printf &quot;\n&quot;
@@ -131,12 +135,16 @@ endif
 <code>/* Write column labels as headers into a string. Eventually
 existing row labels will be placed last. */
 scalar c = nelem(col_labels)
+scalar with_row_labels = nelem(row_labels) &gt; 0
 catch outfile @filename --quiet
   if c &gt; 0
     loop i=1..c -q
-      printf &quot;%s%s&quot;, col_labels[i], delimiter
+      printf &quot;%s&quot;, col_labels[i]
+      if with_row_labels
+        printf &quot;%s&quot;, delimiter
+      endif
     endloop
-    if nelem(row_labels) &gt; 0
+    if with_row_labels
       printf &quot;row_labels&quot;
     endif
     printf &quot;\n&quot;

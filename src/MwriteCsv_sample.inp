@@ -5,7 +5,7 @@ include MwriteCsv.gfn
 
 scalar n_rows = 5
 matrix m = mnormal(n_rows, 5)
-cnameset(m, "date B C D E")
+cnameset(m, "A B C D E")
 strings rnam = array(n_rows)
 loop i=1..n_rows -q
     rnam[i] = sprintf("R%d", $i)
