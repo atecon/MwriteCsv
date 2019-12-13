@@ -16,7 +16,7 @@ function scalar MwriteCsv (const matrix m,
     endif
 
     write_header(col_labels, row_labels, delimiter, filename)
-    write_values(m, row_labels, delimiter, filename)
+    write_values(m, col_labels, row_labels, delimiter, filename)
 
     return 0
 end function
@@ -59,6 +59,7 @@ end function
 
 
 function void write_values (const matrix m,
+                            const strings col_labels,
                             const strings row_labels,
                             const string delimiter,
                             const string filename)
@@ -77,7 +78,7 @@ function void write_values (const matrix m,
             string s = strstrip(sprintf("%16.10g", m[row_loop,]))
             printf "%s%s",  regsub(s, "\s+", delimiter), delimiter
 
-            if nelem(row_labels) > 0
+            if nelem(row_labels) > 0 && nelem(col_labels) > 0
                 printf "%s", row_labels[row_loop]
             endif
 

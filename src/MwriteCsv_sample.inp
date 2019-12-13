@@ -5,7 +5,7 @@ include MwriteCsv.gfn
 
 scalar n_rows = 5
 matrix m = mnormal(n_rows, 5)
-cnameset(m, "A B C D E")
+cnameset(m, "date B C D E")
 strings rnam = array(n_rows)
 loop i=1..n_rows -q
     rnam[i] = sprintf("R%d", $i)
@@ -17,3 +17,4 @@ MwriteCsv(m, "foo.csv")
 
 eval readfile("foo.csv")
 open "foo.csv" -p -q
+

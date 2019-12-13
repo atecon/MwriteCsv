@@ -1,8 +1,13 @@
 set verbose off
 clear
 
-string wd = "/home/at/git/MwriteCsv"
-set workdir @wd
+string WD = "/home/at/git/MwriteCsv"
+scalar N_ROWS = 3
+scalar N_COLS = 3
+string DELIMITER = ","
+string FILENAME = "foo.csv"		# dummy file
+
+set workdir @WD
 include "./src/MwriteCsv.inp" --force
 
 
@@ -61,18 +66,17 @@ endif
 
 
 
-scalar n_rows = 3
-scalar n_cols = 3
-matrix m = mshape(seq(1,9), n_rows, n_cols)
+matrix m = mshape(seq(1,9), N_ROWS, N_COLS)
 cnameset(m, "A B C")
-strings rnam = array(n_rows)
-loop i=1..n_rows -q
+strings rnam = array(N_ROWS)
+loop i=1..N_ROWS -q
     rnam[i] = sprintf("R%d", $i)
 endloop
 rnameset(m, rnam)
-m[1,1] = NA
-MwriteCsv(m, "foo.csv")
-open "foo.csv" -p -q
+m[3,1] = NA
+
+MwriteCsv(m, FILENAME, DELIMITER)
+open @FILENAME -p -q
 
 if nelem(dataset) != 4
     stop
@@ -88,7 +92,6 @@ if nobs(B) != 3
     stop
 endif
 
-
 if varnames(dataset)[1] != "A"
     stop
 endif
@@ -102,7 +105,6 @@ if varnames(dataset)[4] != "row_labels"
     stop
 endif
    
-
 
 if nelem(strvals(row_labels)) != 3
     stop
@@ -118,7 +120,8 @@ if strvals(row_labels)[3] != "R3"
     stop
 endif
 
-if sum(A) != 5
+
+if sum(A) != 3
     stop
 endif
 if sum(B) != 15
@@ -129,9 +132,38 @@ if sum(C) != 24
 endif
 
 
+# without column and hence row labels
+cnameset(m, "")
+MwriteCsv(m, FILENAME, DELIMITER)
+open @FILENAME -p -q
+
+if varnames(dataset)[1] != "v1"
+    stop
+endif
+if varnames(dataset)[2] != "v2"
+    stop
+endif
+if varnames(dataset)[3] != "v3"
+    stop
+endif
+if nelem(varnames(dataset)) != 3
+    stop
+endif
+if nelem(dataset) != 3
+    stop
+endif
+
+if $nobs != 3
+    stop
+endif
+if nobs(v1) != 2
+    stop
+endif
+if nobs(v2) != 3
+    stop
+endif
+
+
 printf "\nInfo: All tests passed.\n"
-
-
-
 
 
