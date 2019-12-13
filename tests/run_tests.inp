@@ -3,7 +3,7 @@ clear
 
 string wd = "/home/at/git/MwriteCsv"
 set workdir @wd
-include "./src/MwriteCsv.inp"
+include "./src/MwriteCsv.inp" --force
 
 
 if add_non_existing_file_type("foo.csv") != "foo.csv"
@@ -89,19 +89,19 @@ if nobs(B) != 3
 endif
 
 
-if varnames(dataset)[1] != "row_labels"
+if varnames(dataset)[1] != "A"
     stop
 endif
-if varnames(dataset)[2] != "A"
+if varnames(dataset)[2] != "B"
     stop
 endif
-if varnames(dataset)[3] != "B"
+if varnames(dataset)[3] != "C"
     stop
 endif
-if varnames(dataset)[4] != "C"
+if varnames(dataset)[4] != "row_labels"
     stop
 endif
-    
+   
 
 
 if nelem(strvals(row_labels)) != 3
@@ -129,26 +129,7 @@ if sum(C) != 24
 endif
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+printf "\nInfo: All tests passed.\n"
 
 
 
