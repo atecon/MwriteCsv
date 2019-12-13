@@ -1,9 +1,9 @@
 set verbose off
 clear
 
-string wd = "/home/at/git/StoreMatrixAsCsv"
+string wd = "/home/at/git/MwriteCsv"
 set workdir @wd
-include "./src/StoreMatrixAsCsv.inp"
+include "./src/MwriteCsv.inp"
 
 
 if add_non_existing_file_type("foo.csv") != "foo.csv"
@@ -71,7 +71,7 @@ loop i=1..n_rows -q
 endloop
 rnameset(m, rnam)
 m[1,1] = NA
-StoreMatrixAsCsv(m, "foo.csv")
+MwriteCsv(m, "foo.csv")
 open "foo.csv" -p -q
 
 if nelem(dataset) != 4
