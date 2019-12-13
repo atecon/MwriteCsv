@@ -5,6 +5,7 @@ string WD = "/home/at/git/MwriteCsv"
 scalar N_ROWS = 3
 scalar N_COLS = 3
 string DELIMITER = ","
+string DELIMITER_2 = ";"
 string FILENAME = "foo.csv"		# dummy file
 
 set workdir @WD
@@ -75,7 +76,11 @@ endloop
 rnameset(m, rnam)
 m[3,1] = NA
 
-MwriteCsv(m, FILENAME, DELIMITER)
+scalar ret = MwriteCsv(m, FILENAME, DELIMITER)
+if ret != 0
+    stop
+endif
+set csv_delim comma
 open @FILENAME -p -q
 
 if nelem(dataset) != 4
@@ -134,7 +139,11 @@ endif
 
 # without column and hence row labels
 cnameset(m, "")
-MwriteCsv(m, FILENAME, DELIMITER)
+scalar ret = MwriteCsv(m, FILENAME, DELIMITER_2)
+if ret != 0
+    stop
+endif
+set csv_delim semicolon
 open @FILENAME -p -q
 
 if varnames(dataset)[1] != "v1"
