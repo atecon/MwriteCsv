@@ -1,19 +1,19 @@
 Written by Artur Tarassow (please ask questions and report bugs on the gretl mailing list if possible).
 
 Source code and test script(s) can be found here:
-https://github.com/atecon/StoreMatrixAsCsv
+https://github.com/atecon/MwriteCsv
 
-Writes the matrix X to a csv-file named filename. In case matrix X comprises column labels, these will be treated as header column labels. If matrix X comprises row labels, these will be added as a string valued column at the first position.
+Writes the matrix X to a csv-file named filename. In case matrix X comprises column labels, these will be treated as header column labels. If matrix X comprises row labels, these will be added as a string valued column at the first position in case no column with the header 'date' or 'obs' exists, otherwise at the second position.
 
-If a file filenam already exists, it will be overwritten. The return value is 0 on successful completion; if an error occurs, such as the file being unwritable, the return value will be non-zero.
+If a file filename already exists, it will be overwritten. The return value is 0 on successful completion; if an error occurs, such as the file being unwritable, the return value will be non-zero.
 
 The output file will be written in the currently set workdir, unless the filename string contains a full path specification.
 
 Output:		integer
 Arguments:	X (matrix)
 		filename (string)
-		delimiter (string, either ';' or ';', default ',')
------------------------------------------------
+		delimiter (string, either ',' or ';', default ';')
+----------------------------------------------------------------------
 
 Changelog:
 - v0.5, December 2019:
