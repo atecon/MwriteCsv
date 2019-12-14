@@ -2,7 +2,7 @@ set verbose off
 clear
 
 string WD = "/home/at/git/MwriteCsv"
-scalar N_ROWS = 3
+scalar N_ROWS = 30
 scalar N_COLS = 3
 string DELIMITER = ","
 string DELIMITER_2 = ";"
@@ -11,49 +11,14 @@ string FILENAME = "foo.csv"		# dummy file
 set workdir @WD
 include "./src/MwriteCsv.inp" --force
 
+nulldata 3 --preserve			# function requires some dataset
 
-if add_non_existing_file_type("foo.csv") != "foo.csv"
-    stop
-endif
-
-if add_non_existing_file_type("csv.csv") != "csv.csv"
-    stop
-endif
-
-if add_non_existing_file_type("foo") != "foo.csv"
-    stop
-endif
-
-if add_non_existing_file_type("foo.CSV") != "foo.csv"
-    stop
-endif
-
-if add_non_existing_file_type("{].CSV") != "{].csv"
-    stop
-endif
-
-if add_non_existing_file_type("foo") != "foo.csv"
-    stop
-endif
-
-if add_non_existing_file_type("foo.csv") != "foo.csv"
-    stop
-endif
-
-if add_non_existing_file_type("csv") != "csv.csv"
-    stop
-endif
 
 if valid_matrix(zeros(0,0)) != 0
     stop
 endif
 
 if valid_matrix(zeros(1,1)) != 1
-    stop
-endif
-
-
-if valid_filename(".csv") != 0
     stop
 endif
 
@@ -65,9 +30,109 @@ if valid_filename("___/") != 1
     stop
 endif
 
+strings S = defarray("A", "B", "C")
+if get_column_name(S, 1) != "A" || get_column_name(S, 2) != "B" \
+  || get_column_name(S, 3) != "C"
+    stop
+endif
+
+strings S = array(0)
+if get_column_name(S, 1) != "v1" || get_column_name(S, 2) != "v2" \
+  || get_column_name(S, 3) != "v3"
+    stop
+endif
 
 
-matrix m = mshape(seq(1,9), N_ROWS, N_COLS)
+
+strings S = defarray("R1", "R2", "R3")
+strings Suniq = struniq(S)
+if nelem(Suniq) != 3
+    stop
+endif
+if Suniq[1] != "R1" || Suniq[2] != "R2" || Suniq[3] != "R3"
+    stop
+endif
+
+strings S = defarray("R1", "R2", "R3", "R-1", "R2", "A", "A", "C")
+strings Suniq = struniq(S)
+if nelem(Suniq) != 6
+    stop
+endif
+if Suniq[1] != "R1" || Suniq[2] != "R2" || Suniq[3] != "R3" \
+  || Suniq[4] != "R-1" || Suniq[5] != "A" || Suniq[6] != "C"
+    stop
+endif
+
+
+# ** HIER MIT TEST FÜR map_uniq_str_to_series() weitermachen ***
+strings S = defarray("R1", "R2", "R2")
+matrix m = ones($tmax, 1)
+rnameset(m, S)
+eval struniq(S)
+
+stop
+
+series foo = seq(1, $tmax)
+series foo2 = foo * 2
+list L = foo foo2
+string filename = "tmp.csv"
+string store_arguments = ""
+if store_list(L, filename, store_arguments) != 0
+    stop
+endif
+catch open @filename -p -q
+if $error
+    stop
+endif
+
+string filename = "/home/someweirdpath/tmp.csv"
+list L = foo foo2
+string store_arguments = ""
+if store_list(L, filename, store_arguments) != 1
+    stop
+endif
+
+
+
+matrix m = ones($tmax, 3) .* seq(2,4)
+list L = matrix_to_list(m, cnameget(m), rnameget(m))
+if nelem(L) != 3
+    stop
+endif
+if varnames(L)[1] != "v1" || varnames(L)[2] != "v2" || varnames(L)[3] != "v3"
+    stop
+endif
+if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[1]) != 2*$tmax
+    stop
+endif
+
+strings S = defarray("A", "B", "C")
+cnameset(m, S)
+list L = matrix_to_list(m, cnameget(m), rnameget(m))
+if nelem(L) != 3
+    stop
+endif
+if varnames(L)[1] != "A" || varnames(L)[2] != "B" || varnames(L)[3] != "C"
+    stop
+endif
+if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[1]) != 2*$tmax
+    stop
+endif
+
+# TODO: matrix_to_list() with row-labels
+strings rnames = defarray("R1", "R2", "R3")
+
+
+
+
+
+
+print "passed"
+
+stop
+
+
+matrix m = mshape(seq(1,N_ROWS*N_COLS), N_ROWS, N_COLS)
 cnameset(m, "A B C")
 strings rnam = array(N_ROWS)
 loop i=1..N_ROWS -q
@@ -75,6 +140,8 @@ loop i=1..N_ROWS -q
 endloop
 rnameset(m, rnam)
 m[3,1] = NA
+
+
 
 scalar ret = MwriteCsv(m, FILENAME, DELIMITER)
 if ret != 0

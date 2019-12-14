@@ -1,24 +1,91 @@
 function scalar MwriteCsv (const matrix m,
                            string filename "Path+filename",
-                           const string delimiter[null] "Column separator: ';' or ',' (default ';')")
-    /* Main public function. */
+                           const string store_arguments[null] "Options for 'store' command")
 
     if !valid_filename(filename) || !valid_matrix(m)
         return 1
     endif
 
-    string filename = add_non_existing_file_type(filename)
-    strings col_labels = cnameget(m)
-    strings row_labels = rnameget(m)
-
-    if !exists(delimiter)
-        string delimiter = ";"
+#    string filename = add_non_existing_file_type(filename)	# TODO: still needed?
+    if !exists(store_arguments)
+        string store_arguments = ""
     endif
 
-    write_header(col_labels, row_labels, delimiter, filename)
-    write_values(m, col_labels, row_labels, delimiter, filename)
+    # Addings obs cannot be put into a separate function (added obs would get lost)
+    if Tlocal <= $tmax
+        smpl 1 Tlocal
+    else
+        smpl 1 $tmax
+        scalar Tadd = Tlocal - $nobs
+        dataset addobs Tadd
+    endif
 
-    return 0
+    list L = matrix_to_list(m, cnameget(m), rnameget(m))
+
+    scalar err = store_list(L, filename, store_arguments)
+
+    return err
+end function
+
+
+function scalar store_list (const list L,
+                            const string filename,
+                            const string store_arguments)
+    /* Store list of series. */
+
+    catch store "@filename" L @store_arguments
+    if $error
+        printf "\nError: Could not store file '%s'.\n", filename
+        return 1
+    else
+        return 0
+    endif
+end function
+
+
+function list matrix_to_list (const matrix m,
+                              const strings column_labels,
+                              const strings row_labels)
+    /* Cast colum-vectors as series and put series to a list.
+       Name series accordingly to eventually existing column-labels.
+       In case row-labels exist, put another string-values series to
+    the list. */
+
+    list L = null
+
+    loop i=1..cols(m) -q
+        list L += genseries(get_column_name(column_labels, $i), m[,i])
+    endloop
+    print L -o
+
+    # TODO: tricky case!
+    if nelem(row_labels) > 0
+        #        string vname = "row_label"
+        #        series @vname = stringify
+        #        list L += genseries(vname, m[,i])
+    endif
+
+    return L
+end function
+
+function string get_row_name (const strings column_labels,
+                                 const int series_id)
+/* Either retrieve matrix' column labels, or
+    generate a new series name. */
+    
+
+end function
+
+function string get_column_name (const strings column_labels,
+                                 const int series_id)
+/* Either retrieve matrix' column labels, or
+    generate a new series name. */
+
+    if nelem(column_labels) > 0
+        return sprintf("%s", column_labels[series_id])
+    else
+        return sprintf("v%d", series_id)
+    endif
 end function
 
 
@@ -31,9 +98,9 @@ function scalar valid_matrix (const matrix m)
     endif
 end function
 
-
+# TODO: Still needed??
 function scalar valid_filename (const string filename)
-    if strlen(filename) == 0 || filename == ".csv"
+    if strlen(filename) == 0
         printf "\nError: Invalid filename.\n"
         return 0
     else
@@ -42,89 +109,69 @@ function scalar valid_filename (const string filename)
 end function
 
 
-function string add_non_existing_file_type (string filename)
-/* Search for file type '.csv' in filename. If not found,
-      add '.csv' to string filename. */
+# Mapping from each unique string-value to a specific integer
+# for whole series
 
-    string filename = tolower(filename)
+function series map_uniq_str_to_series (const strings row_labels)
 
-    search_for_csv = strlen(strstr(filename, ".csv"))
-    if search_for_csv == 4			# found '.csv' in filename
-        return filename
-    else
-        filename = sprintf("%s.csv", filename)
-        return filename
+    strings suniq = struniq(row_labels)
+    matrix m = NA * ones(1, $tmax)
+
+    if nelem(row_labels) != $tmax
+        printf "\nError: Dimension of row_labels must equal number of observations .\n"
     endif
-end function
 
-
-function void write_values (const matrix m,
-                            const strings col_labels,
-                            const strings row_labels,
-                            const string delimiter,
-                            const string filename)
-    /* Write values of matrix m. Eventually existing row labels
-    (strings) of input matrix m are written to an additional column
-    (positioned last). */
-
-    scalar n_rows = rows(m)
-    scalar n_cols = cols(m)
-    scalar with_labels = (nelem(row_labels)>0 && nelem(col_labels) > 0)
+    loop i=1..$tmax -q
+        m[i] = strpos(suniq, row_labels[i])
+    endloop
+    *** HIER WEITERMACHEN ***
+    series s = m
     
-    cnameset(m, "")			# necessary reset of colum names
+    return s
+end function
 
-    catch outfile @filename --append --quiet
 
-        loop row_loop=1..n_rows -q
-            string s = strstrip(sprintf("%16.10g", m[row_loop,]))
-            printf "%s",  regsub(s, "\s+", delimiter)
-            
-            if with_labels
-                printf "%s", delimiter
-                printf "%s", row_labels[row_loop]
-            endif
 
-            printf "\n"
-        endloop
+# TODO: Will be part of extra.gfn in v0.51
+function matrix strpos (const strings S "Array of strings",
+                        const string str "String being searched for in S",
+                        const bool print_warnings[1] "Print eventual warnings")
+    # Returns the positional entries of string in S in a column vector
+    # if S contains string, 0 otherwise.
 
-    end outfile
+    if nelem(S) == 0
+        if print_warnings
+            printf "Warning: String array '%s' is empty.\n", argname(S)
+        endif
+        return {0}
+    endif
 
-    if $error
-        printf "\nError: Cannot write values.\n"
+    matrix ret = {}
+    loop i=1..nelem(S) -q
+        if S[i] == str
+            ret |= $i
+        endif
+    endloop
+
+    if rows(ret) > 0
+        return ret
+    else
+        return {0}
     endif
 end function
 
 
-function void write_header (const strings col_labels,
-                            const strings row_labels,
-                            const string delimiter,
-                            const string filename)
-    /* Write column labels as headers into a string. Eventually
-    existing row labels will be placed last. */
+function strings struniq (const strings S)
+    /* Returns an array containing the distinct elements
+    of S not sorted but in their order of appearance. */
 
-    scalar c = nelem(col_labels)
-    scalar with_row_labels = nelem(row_labels) > 0
-
-    catch outfile @filename --quiet
-
-        if c > 0
-            loop i=1..c -q
-                printf "%s", col_labels[i]
-                if with_row_labels
-                    printf "%s", delimiter
-                endif
-            endloop
-
-            if with_row_labels
-                printf "row_labels"
-            endif
-
-            printf "\n"
+    strings suniq = defarray(S[1])
+    
+    loop i=2..nelem(S) -q
+        if strpos(suniq, S[i]) == 0
+            suniq += S[i]
         endif
-
-    end outfile
-
-    if $error
-        printf "\nError: Cannot write headers.\n"
-    endif
+    endloop
+    
+    return suniq
 end function
