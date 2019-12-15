@@ -64,13 +64,48 @@ if Suniq[1] != "R1" || Suniq[2] != "R2" || Suniq[3] != "R3" \
 endif
 
 
-# ** HIER MIT TEST FÜR map_uniq_str_to_series() weitermachen ***
-strings S = defarray("R1", "R2", "R2")
-matrix m = ones($tmax, 1)
-rnameset(m, S)
-eval struniq(S)
+strings S = defarray("R1", "R2", "R3")
+if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 2 \
+  || map_uniq_str_to_int_series(S)[3] != 3
+    stop
+endif
 
-stop
+strings S = defarray("R1", "R2", "R1")
+if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 2 \
+  || map_uniq_str_to_int_series(S)[1] != 1
+    stop
+endif
+
+strings S = defarray("R1", "R2", "R1", "R4")
+if sum(map_uniq_str_to_int_series(S)) != -1*$tmax
+    stop
+endif
+
+
+strings S = defarray("R1", "R2", "R3")
+series y = map_uniq_str_to_int_series(S)
+stringify(y, S)
+if y[1] != "R1" || y[2] != "R2" || y[3] != "R3"
+    stop
+endif
+delete y
+
+strings S = defarray("R1", "R2", "R1")
+series y = map_uniq_str_to_int_series(S)
+stringify(y, S)
+if y[1] != "R1" || y[2] != "R2" || y[3] != "R1"
+    stop
+endif
+delete y
+
+strings S = defarray("R1", "R2", "")
+series y = map_uniq_str_to_int_series(S)
+stringify(y, S)
+if y[1] != "R1" || y[2] != "R2" || y[3] != ""
+    stop
+endif
+
+
 
 series foo = seq(1, $tmax)
 series foo2 = foo * 2
@@ -94,6 +129,23 @@ endif
 
 
 
+# TODO: Doesn't work yet!
+#include "./src/MwriteCsv.inp" --force
+strings rnames = defarray("R1", "R2", "R3")
+series y = get_str_valued_series(rnames)
+if y[1] != "R1" || y[2] != "R2" || y[3] != "R3"
+    stop
+endif
+delete y
+
+strings rnames = defarray("R1", "R2", "R1")
+series y = get_str_valued_series(rnames)
+if y[1] != "R1" || y[2] != "R2" || y[3] != "R1"
+    stop
+endif
+
+
+
 matrix m = ones($tmax, 3) .* seq(2,4)
 list L = matrix_to_list(m, cnameget(m), rnameget(m))
 if nelem(L) != 3
@@ -102,7 +154,7 @@ endif
 if varnames(L)[1] != "v1" || varnames(L)[2] != "v2" || varnames(L)[3] != "v3"
     stop
 endif
-if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[1]) != 2*$tmax
+if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[3]) != 4*$tmax
     stop
 endif
 
@@ -115,21 +167,31 @@ endif
 if varnames(L)[1] != "A" || varnames(L)[2] != "B" || varnames(L)[3] != "C"
     stop
 endif
-if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[1]) != 2*$tmax
+if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[3]) != 4*$tmax
     stop
 endif
 
-# TODO: matrix_to_list() with row-labels
+
 strings rnames = defarray("R1", "R2", "R3")
-
-
-
-
-
+rnameset(m, rnames)
+list L = matrix_to_list(m, cnameget(m), rnameget(m))
+if nelem(L) != 4
+    stop
+endif
+if varnames(L)[1] != "A" || varnames(L)[2] != "B" || varnames(L)[3] != "C" \
+  || varnames(L)[4] != "row_label"
+    stop
+endif
+if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[3]) != 4*$tmax
+    stop
+endif
+if row_label[1] != "R1" || row_label[2] != "R2" || row_label[3] != "R3"
+    stop
+endif
 
 print "passed"
 
-stop
+
 
 
 matrix m = mshape(seq(1,N_ROWS*N_COLS), N_ROWS, N_COLS)
@@ -142,8 +204,8 @@ rnameset(m, rnam)
 m[3,1] = NA
 
 
-
-scalar ret = MwriteCsv(m, FILENAME, DELIMITER)
+include "./src/MwriteCsv.inp" --force
+scalar ret = MwriteCsv(m, FILENAME)
 if ret != 0
     stop
 endif
