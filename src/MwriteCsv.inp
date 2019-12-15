@@ -1,12 +1,11 @@
 function scalar MwriteCsv (const matrix m,
                            string filename "Path+filename",
-                           const string store_arguments[null] "Options for 'store' command")
+                           const string store_arguments[null] "(untested) Options for 'store' command")
 
     if !valid_filename(filename) || !valid_matrix(m)
         return 1
     endif
 
-#    string filename = add_non_existing_file_type(filename)	# TODO: still needed?
     if !exists(store_arguments)
         string store_arguments = ""
     endif
@@ -60,7 +59,7 @@ function list matrix_to_list (const matrix m,
 
     if nelem(row_labels) > 0
         string vname = "row_label"
-#        series foo = get_str_valued_series(row_labels)
+#        series foo = get_str_valued_series(row_labels)			# FIXME: 
 #        print foo -o
 #        stop
         list L += genseries(vname, get_str_valued_series(row_labels))
@@ -104,7 +103,6 @@ function scalar valid_matrix (const matrix m)
     endif
 end function
 
-# TODO: Still needed??
 function scalar valid_filename (const string filename)
     if strlen(filename) == 0
         printf "\nError: Invalid filename.\n"
