@@ -4,9 +4,7 @@ clear
 string WD = "/home/at/git/MwriteCsv"
 scalar N_ROWS = 3
 scalar N_COLS = 3
-string DELIMITER = ","
-string DELIMITER_2 = ";"
-string FILENAME = "foo.csv"		# dummy file
+string FILENAME = "foo.gdt"		# dummy file
 
 set workdir @WD
 include "./src/MwriteCsv.inp" --force
@@ -14,6 +12,7 @@ include "./src/MwriteCsv.inp" --force
 nulldata 3 --preserve			# function requires some dataset
 
 
+print "Start with valid_matrix()"
 if valid_matrix(zeros(0,0)) != 0
     stop
 endif
@@ -22,6 +21,9 @@ if valid_matrix(zeros(1,1)) != 1
     stop
 endif
 
+
+
+print "Start with valid_filename()"
 if valid_filename("") != 0
     stop
 endif
@@ -30,6 +32,9 @@ if valid_filename("___/") != 1
     stop
 endif
 
+
+
+print "Start with get_column_name()"
 strings S = defarray("A", "B", "C")
 if get_column_name(S, 1) != "A" || get_column_name(S, 2) != "B" \
   || get_column_name(S, 3) != "C"
@@ -44,6 +49,7 @@ endif
 
 
 
+print "Start with struniq()"
 strings S = defarray("R1", "R2", "R3")
 strings Suniq = struniq(S)
 if nelem(Suniq) != 3
@@ -64,6 +70,7 @@ if Suniq[1] != "R1" || Suniq[2] != "R2" || Suniq[3] != "R3" \
 endif
 
 
+print "Start with map_uniq_str_to_int_series()"
 strings S = defarray("R1", "R2", "R3")
 if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 2 \
   || map_uniq_str_to_int_series(S)[3] != 3
@@ -107,6 +114,7 @@ endif
 
 
 
+print "Start with store_list()"
 series foo = seq(1, $tmax)
 series foo2 = foo * 2
 list L = foo foo2
@@ -129,23 +137,25 @@ endif
 
 
 
-# TODO: Doesn't work yet!
-#include "./src/MwriteCsv.inp" --force
+print "Start with get_str_valued_series()"
 strings rnames = defarray("R1", "R2", "R3")
-series y = get_str_valued_series(rnames)
+series y
+series y = get_str_valued_series(rnames, &y)
 if y[1] != "R1" || y[2] != "R2" || y[3] != "R3"
     stop
 endif
 delete y
 
 strings rnames = defarray("R1", "R2", "R1")
-series y = get_str_valued_series(rnames)
+series y
+series y = get_str_valued_series(rnames, &y)
 if y[1] != "R1" || y[2] != "R2" || y[3] != "R1"
     stop
 endif
 
 
 
+print "Start with matrix_to_list()"
 matrix m = ones($tmax, 3) .* seq(2,4)
 list L = matrix_to_list(m, cnameget(m), rnameget(m))
 if nelem(L) != 3
@@ -157,6 +167,7 @@ endif
 if sum(L[1]) != 2*$tmax || sum(L[2]) != 3*$tmax || sum(L[3]) != 4*$tmax
     stop
 endif
+
 
 strings S = defarray("A", "B", "C")
 cnameset(m, S)
@@ -189,10 +200,9 @@ if row_label[1] != "R1" || row_label[2] != "R2" || row_label[3] != "R3"
     stop
 endif
 
-print "passed"
 
 
-
+print "Start with MwriteCsv()"
 
 matrix m = mshape(seq(1,N_ROWS*N_COLS), N_ROWS, N_COLS)
 cnameset(m, "A B C")
@@ -203,12 +213,10 @@ endloop
 rnameset(m, rnam)
 m[3,1] = NA
 
-
 scalar ret = MwriteCsv(m, FILENAME)
 if ret != 0
     stop
 endif
-set csv_delim comma
 open @FILENAME -p -q
 
 if nelem(dataset) != 4
@@ -313,7 +321,57 @@ if strvals(row_label)[3] != "R3"
     stop
 endif
 
+if sum(v1) != 3
+    stop
+endif
+if sum(v2) != 15
+    stop
+endif
+if sum(v3) != 24
+    stop
+endif
 
+
+# without row labels
+cnameset(m, "A B C")
+rnameset(m, "")
+
+scalar ret = MwriteCsv(m, FILENAME)
+if ret != 0
+    stop
+endif
+open @FILENAME -p -q
+
+if nelem(dataset) != 3
+    stop
+endif
+
+if varnames(dataset)[1] != "A"
+    stop
+endif
+if varnames(dataset)[2] != "B"
+    stop
+endif
+if varnames(dataset)[3] != "C"
+    stop
+endif
+
+if $nobs != 3
+    stop
+endif
+if nobs(A) != 2 || nobs(B) != 3 || nobs(C) != 3
+    stop
+endif
+
+if sum(A) != 3
+    stop
+endif
+if sum(B) != 15
+    stop
+endif
+if sum(C) != 24
+    stop
+endif
 
 printf "\nInfo: All tests passed.\n"
 

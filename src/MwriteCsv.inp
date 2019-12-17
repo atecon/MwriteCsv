@@ -20,8 +20,7 @@ function scalar MwriteCsv (const matrix m,
         dataset addobs Tadd
     endif
 
-    list L = matrix_to_list(m, cnameget(m), rnameget(m))
-
+    list L = matrix_to_list(m, cnameget(m), rnameget(m))    
     scalar err = store_list(L, filename, store_arguments)
 
     return err
@@ -59,25 +58,23 @@ function list matrix_to_list (const matrix m,
 
     if nelem(row_labels) > 0
         string vname = "row_label"
-#        series foo = get_str_valued_series(row_labels)			# FIXME: 
-#        print foo -o
-#        stop
-        list L += genseries(vname, get_str_valued_series(row_labels))
-#        print L -o
-#        stop
+        series @vname
+        list L += genseries(vname, get_str_valued_series(row_labels, &@vname))
     endif
 
     return L
 end function
 
 
-function series get_str_valued_series (const strings S)
+function series get_str_valued_series (const strings S,
+                                       series *ret)
     /* Generate string-valued series comprising row labels. */
 
     series y = map_uniq_str_to_int_series(S)
-    stringify(y, S)
+    series ret = y		# see manual sec. 15.4: "ret" must be assigned by y!
+    stringify(ret, S)
 
-    return y
+    return ret
 end function
 
 
