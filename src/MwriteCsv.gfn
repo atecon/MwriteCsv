@@ -35,23 +35,94 @@ Changelog:
   <param name="filename" type="string">
 <description>Path+filename</description>
   </param>
-  <param name="delimiter" type="string" optional="true" const="true">
-<description>Column separator: ';' or ',' (default ';')</description>
+  <param name="store_arguments" type="string" optional="true" const="true">
+<description>(untested) Options for 'store' command</description>
   </param>
  </params>
-<code>/* Main public function. */
-if !valid_filename(filename) || !valid_matrix(m)
+<code>if !valid_filename(filename) || !valid_matrix(m)
   return 1
 endif
-string filename = add_non_existing_file_type(filename)
-strings col_labels = cnameget(m)
-strings row_labels = rnameget(m)
-if !exists(delimiter)
-  string delimiter = &quot;;&quot;
+if !exists(store_arguments)
+  string store_arguments = &quot;&quot;
 endif
-write_header(col_labels, row_labels, delimiter, filename)
-write_values(m, col_labels, row_labels, delimiter, filename)
-return 0
+# Addings obs cannot be put into a separate function (added obs would get lost)
+scalar Tlocal = rows(m)
+if Tlocal &lt;= $tmax
+  smpl 1 Tlocal
+else
+  smpl 1 $tmax
+  scalar Tadd = Tlocal - $nobs
+  dataset addobs Tadd
+endif
+list L = matrix_to_list(m, cnameget(m), rnameget(m))
+scalar err = store_list(L, filename, store_arguments)
+return err
+</code>
+</gretl-function>
+<gretl-function name="store_list" type="scalar" private="1">
+ <params count="3">
+  <param name="L" type="list" const="true"/>
+  <param name="filename" type="string" const="true"/>
+  <param name="store_arguments" type="string" const="true"/>
+ </params>
+<code>/* Store list of series. */
+catch store &quot;@filename&quot; L @store_arguments
+if $error
+  printf &quot;\nError: Could not store file '%s'.\n&quot;, filename
+  return 1
+else
+  return 0
+endif
+</code>
+</gretl-function>
+<gretl-function name="matrix_to_list" type="list" private="1">
+ <params count="3">
+  <param name="m" type="matrix" const="true"/>
+  <param name="column_labels" type="strings" const="true"/>
+  <param name="row_labels" type="strings" const="true"/>
+ </params>
+<code>/* Cast colum-vectors as series and put series to a list.
+Name series accordingly to eventually existing column-labels.
+In case row-labels exist, put another string-values series to
+the list. */
+list L = null
+loop i=1..cols(m) -q
+  list L += genseries(get_column_name(column_labels, $i), m[,i])
+endloop
+if nelem(row_labels) &gt; 0
+  string vname = &quot;row_label&quot;
+  #        series foo = get_str_valued_series(row_labels)			# FIXME:
+  #        print foo -o
+  #        stop
+  list L += genseries(vname, get_str_valued_series(row_labels))
+  #        print L -o
+  #        stop
+endif
+return L
+</code>
+</gretl-function>
+<gretl-function name="get_str_valued_series" type="series" private="1">
+ <params count="1">
+  <param name="S" type="strings" const="true"/>
+ </params>
+<code>/* Generate string-valued series comprising row labels. */
+series y = map_uniq_str_to_int_series(S)
+stringify(y, S)
+return y
+</code>
+</gretl-function>
+<gretl-function name="get_column_name" type="string" private="1">
+ <params count="2">
+  <param name="column_labels" type="strings" const="true"/>
+  <param name="series_id" type="int" const="true"/>
+ </params>
+<code>/* Either retrieve matrix' column labels, or
+generate a new series name. */
+if nelem(column_labels) &gt; 0
+  return sprintf(&quot;%s&quot;, column_labels[series_id])
+else
+  return sprintf(&quot;v%d&quot;, series_id)
+endif
 </code>
 </gretl-function>
 <gretl-function name="valid_matrix" type="scalar" private="1">
@@ -70,7 +141,7 @@ endif
  <params count="1">
   <param name="filename" type="string" const="true"/>
  </params>
-<code>if strlen(filename) == 0 || filename == &quot;.csv&quot;
+<code>if strlen(filename) == 0
   printf &quot;\nError: Invalid filename.\n&quot;
   return 0
 else
@@ -78,81 +149,72 @@ else
 endif
 </code>
 </gretl-function>
-<gretl-function name="add_non_existing_file_type" type="string" private="1">
+<gretl-function name="map_uniq_str_to_int_series" type="series" private="1">
  <params count="1">
-  <param name="filename" type="string"/>
+  <param name="S" type="strings" const="true"/>
  </params>
-<code>/* Search for file type '.csv' in filename. If not found,
-add '.csv' to string filename. */
-string filename = tolower(filename)
-search_for_csv = strlen(strstr(filename, &quot;.csv&quot;))
-if search_for_csv == 4			# found '.csv' in filename
-  return filename
-else
-  filename = sprintf(&quot;%s.csv&quot;, filename)
-  return filename
+<code>/* Get unique string-values of array. Map each unique string value
+in S to a unique integer and store vector as series. */
+strings suniq = struniq(S)
+matrix m = NA * ones(1, $tmax)
+series s = -1
+if nelem(S) != $tmax
+  printf &quot;\nError: Dimension of 'row_labels' must equal number of observations .\n&quot;
+  return s
 endif
+loop i=1..$tmax -q
+  m[i] = strpos(suniq, S[i])
+endloop
+series s = m
+return s
 </code>
 </gretl-function>
-<gretl-function name="write_values" type="void" private="1">
- <params count="5">
-  <param name="m" type="matrix" const="true"/>
-  <param name="col_labels" type="strings" const="true"/>
-  <param name="row_labels" type="strings" const="true"/>
-  <param name="delimiter" type="string" const="true"/>
-  <param name="filename" type="string" const="true"/>
+<gretl-function name="strpos" type="matrix" private="1">
+ <params count="3">
+  <param name="S" type="strings" const="true">
+<description>Array of strings</description>
+  </param>
+  <param name="str" type="string" const="true">
+<description>String being searched for in S</description>
+  </param>
+  <param name="print_warnings" type="bool" default="1" const="true">
+<description>Print eventual warnings</description>
+  </param>
  </params>
-<code>/* Write values of matrix m. Eventually existing row labels
-(strings) of input matrix m are written to an additional column
-(positioned last). */
-scalar n_rows = rows(m)
-scalar n_cols = cols(m)
-scalar with_labels = (nelem(row_labels)&gt;0 &amp;&amp; nelem(col_labels) &gt; 0)
-cnameset(m, &quot;&quot;)			# necessary reset of colum names
-catch outfile @filename --append --quiet
-  loop row_loop=1..n_rows -q
-    string s = strstrip(sprintf(&quot;%16.10g&quot;, m[row_loop,]))
-    printf &quot;%s&quot;,  regsub(s, &quot;\s+&quot;, delimiter)
-    if with_labels
-      printf &quot;%s&quot;, delimiter
-      printf &quot;%s&quot;, row_labels[row_loop]
-    endif
-    printf &quot;\n&quot;
-  endloop
-end outfile
-if $error
-  printf &quot;\nError: Cannot write values.\n&quot;
-endif
-</code>
-</gretl-function>
-<gretl-function name="write_header" type="void" private="1">
- <params count="4">
-  <param name="col_labels" type="strings" const="true"/>
-  <param name="row_labels" type="strings" const="true"/>
-  <param name="delimiter" type="string" const="true"/>
-  <param name="filename" type="string" const="true"/>
- </params>
-<code>/* Write column labels as headers into a string. Eventually
-existing row labels will be placed last. */
-scalar c = nelem(col_labels)
-scalar with_row_labels = nelem(row_labels) &gt; 0
-catch outfile @filename --quiet
-  if c &gt; 0
-    loop i=1..c -q
-      printf &quot;%s&quot;, col_labels[i]
-      if with_row_labels
-        printf &quot;%s&quot;, delimiter
-      endif
-    endloop
-    if with_row_labels
-      printf &quot;row_labels&quot;
-    endif
-    printf &quot;\n&quot;
+<code># Returns the positional entries of string in S in a column vector
+# if S contains string, 0 otherwise.
+if nelem(S) == 0
+  if print_warnings
+    printf &quot;Warning: String array '%s' is empty.\n&quot;, argname(S)
   endif
-end outfile
-if $error
-  printf &quot;\nError: Cannot write headers.\n&quot;
+  return {0}
 endif
+matrix ret = {}
+loop i=1..nelem(S) -q
+  if S[i] == str
+    ret |= $i
+  endif
+endloop
+if rows(ret) &gt; 0
+  return ret
+else
+  return {0}
+endif
+</code>
+</gretl-function>
+<gretl-function name="struniq" type="strings" private="1">
+ <params count="1">
+  <param name="S" type="strings" const="true"/>
+ </params>
+<code>/* Returns an array containing the distinct elements
+of S not sorted but in their order of appearance. */
+strings suniq = defarray(S[1])
+loop i=2..nelem(S) -q
+  if strpos(suniq, S[i]) == 0		# TODO: What about empty strings?
+    suniq += S[i]
+  endif
+endloop
+return suniq
 </code>
 </gretl-function>
 <sample-script>
