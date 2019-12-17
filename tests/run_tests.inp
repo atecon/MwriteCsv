@@ -7,7 +7,7 @@ scalar N_COLS = 3
 string FILENAME = "foo.gdt"		# dummy file
 
 set workdir @WD
-include "./src/Mat2Datafile.inp" --force
+include "./src/MwriteCsv.inp" --force		# TODO: rename
 
 nulldata 3 --preserve			# function requires some dataset
 
