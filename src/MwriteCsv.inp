@@ -139,6 +139,7 @@ end function
 
 
 
+/*
 function matrix strpos (const strings S "Array of strings",
                         const string str "String being searched for in S",
                         const bool print_warnings[1] "Print eventual warnings")
@@ -165,11 +166,12 @@ function matrix strpos (const strings S "Array of strings",
         return {0}
     endif
 end function
+*/
 
-
+/*
 function strings struniq (const strings S)
-    /* Returns an array containing the distinct elements
-    of S not sorted but in their order of appearance. */
+    # Returns an array containing the distinct elements
+    #of S not sorted but in their order of appearance.
 
     strings suniq = defarray(S[1])
     
@@ -181,3 +183,4 @@ function strings struniq (const strings S)
     
     return suniq
 end function
+*/

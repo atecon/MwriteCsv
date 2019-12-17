@@ -49,27 +49,6 @@ endif
 
 
 
-print "Start with struniq()"
-strings S = defarray("R1", "R2", "R3")
-strings Suniq = struniq(S)
-if nelem(Suniq) != 3
-    stop
-endif
-if Suniq[1] != "R1" || Suniq[2] != "R2" || Suniq[3] != "R3"
-    stop
-endif
-
-strings S = defarray("R1", "R2", "R3", "R-1", "R2", "A", "A", "C")
-strings Suniq = struniq(S)
-if nelem(Suniq) != 6
-    stop
-endif
-if Suniq[1] != "R1" || Suniq[2] != "R2" || Suniq[3] != "R3" \
-  || Suniq[4] != "R-1" || Suniq[5] != "A" || Suniq[6] != "C"
-    stop
-endif
-
-
 print "Start with map_uniq_str_to_int_series()"
 strings S = defarray("R1", "R2", "R3")
 if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 2 \
@@ -203,7 +182,6 @@ endif
 
 
 print "Start with MwriteCsv()"
-
 matrix m = mshape(seq(1,N_ROWS*N_COLS), N_ROWS, N_COLS)
 cnameset(m, "A B C")
 strings rnam = array(N_ROWS)
