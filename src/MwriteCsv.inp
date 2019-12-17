@@ -76,7 +76,7 @@ function void write_values (const matrix m,
     catch outfile @filename --append --quiet
 
         loop row_loop=1..n_rows -q
-            string s = strstrip(sprintf("%16.10g", m[row_loop,]))
+            string s = strstrip(sprintf("%20.16g", m[row_loop,]))
             printf "%s",  regsub(s, "\s+", delimiter)
             
             if with_labels
