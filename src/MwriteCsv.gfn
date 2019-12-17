@@ -3,8 +3,8 @@
 <gretl-function-package name="MwriteCsv" no-data-ok="true" minver="2018a">
 <author email="atecon@posteo.de">Artur Tarassow</author>
 <version>0.5</version>
-<date>2019-12-13</date>
-<description>Write matrix to csv file</description>
+<date>2019-12-17</date>
+<description>Write matrix as dataset to some file (e.g. csv, gdt)</description>
 <tags>C81</tags>
 <help>
 Written by Artur Tarassow (please ask questions and report bugs on the gretl mailing list if possible).
@@ -29,7 +29,9 @@ Changelog:
 - v0.5, December 2019:
     + initial release
 </help>
-<gretl-function name="MwriteCsv" type="scalar">
+<depends count="1">
+string_utils </depends>
+<gretl-function name="Mat2Datafile" type="scalar">
  <params count="3">
   <param name="m" type="matrix" const="true"/>
   <param name="filename" type="string">
@@ -44,6 +46,9 @@ Changelog:
 endif
 if !exists(store_arguments)
   string store_arguments = &quot;&quot;
+else
+  printf &quot;\nError: Argument 'store_arguments' not supported, yet.\n&quot;
+  return 1
 endif
 # Addings obs cannot be put into a separate function (added obs would get lost)
 scalar Tlocal = rows(m)
@@ -91,24 +96,22 @@ loop i=1..cols(m) -q
 endloop
 if nelem(row_labels) &gt; 0
   string vname = &quot;row_label&quot;
-  #        series foo = get_str_valued_series(row_labels)			# FIXME:
-  #        print foo -o
-  #        stop
-  list L += genseries(vname, get_str_valued_series(row_labels))
-  #        print L -o
-  #        stop
+  series @vname
+  list L += genseries(vname, get_str_valued_series(row_labels, &amp;@vname))
 endif
 return L
 </code>
 </gretl-function>
 <gretl-function name="get_str_valued_series" type="series" private="1">
- <params count="1">
+ <params count="2">
   <param name="S" type="strings" const="true"/>
+  <param name="ret" type="seriesref"/>
  </params>
 <code>/* Generate string-valued series comprising row labels. */
 series y = map_uniq_str_to_int_series(S)
-stringify(y, S)
-return y
+series ret = y		# see manual sec. 15.4: &quot;ret&quot; must be assigned by y!
+stringify(ret, S)
+return ret
 </code>
 </gretl-function>
 <gretl-function name="get_column_name" type="string" private="1">
@@ -169,59 +172,11 @@ series s = m
 return s
 </code>
 </gretl-function>
-<gretl-function name="strpos" type="matrix" private="1">
- <params count="3">
-  <param name="S" type="strings" const="true">
-<description>Array of strings</description>
-  </param>
-  <param name="str" type="string" const="true">
-<description>String being searched for in S</description>
-  </param>
-  <param name="print_warnings" type="bool" default="1" const="true">
-<description>Print eventual warnings</description>
-  </param>
- </params>
-<code># Returns the positional entries of string in S in a column vector
-# if S contains string, 0 otherwise.
-if nelem(S) == 0
-  if print_warnings
-    printf &quot;Warning: String array '%s' is empty.\n&quot;, argname(S)
-  endif
-  return {0}
-endif
-matrix ret = {}
-loop i=1..nelem(S) -q
-  if S[i] == str
-    ret |= $i
-  endif
-endloop
-if rows(ret) &gt; 0
-  return ret
-else
-  return {0}
-endif
-</code>
-</gretl-function>
-<gretl-function name="struniq" type="strings" private="1">
- <params count="1">
-  <param name="S" type="strings" const="true"/>
- </params>
-<code>/* Returns an array containing the distinct elements
-of S not sorted but in their order of appearance. */
-strings suniq = defarray(S[1])
-loop i=2..nelem(S) -q
-  if strpos(suniq, S[i]) == 0		# TODO: What about empty strings?
-    suniq += S[i]
-  endif
-endloop
-return suniq
-</code>
-</gretl-function>
 <sample-script>
 set verbose off
 clear
 
-include MwriteCsv.gfn
+include Mat2Datafile.gfn
 
 scalar n_rows = 5
 matrix m = mnormal(n_rows, 5)
@@ -233,7 +188,7 @@ endloop
 rnameset(m, rnam)
 m[1,1] = NA
 
-MwriteCsv(m, &quot;foo.csv&quot;)
+Mat2Datafile(m, &quot;foo.csv&quot;)
 
 eval readfile(&quot;foo.csv&quot;)
 open &quot;foo.csv&quot; -p -q

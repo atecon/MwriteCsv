@@ -1,13 +1,13 @@
 set verbose off
 clear
 
-string WD = "/home/at/git/MwriteCsv"
+string WD = "/home/at/git/MwriteCsv"		# TODO: rename
 scalar N_ROWS = 3
 scalar N_COLS = 3
 string FILENAME = "foo.gdt"		# dummy file
 
 set workdir @WD
-include "./src/MwriteCsv.inp" --force
+include "./src/Mat2Datafile.inp" --force
 
 nulldata 3 --preserve			# function requires some dataset
 
@@ -314,7 +314,7 @@ endif
 cnameset(m, "A B C")
 rnameset(m, "")
 
-scalar ret = MwriteCsv(m, FILENAME)
+scalar ret = Mat2Datafile(m, FILENAME)
 if ret != 0
     stop
 endif
