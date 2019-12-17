@@ -8,6 +8,9 @@ function scalar MwriteCsv (const matrix m,
 
     if !exists(store_arguments)
         string store_arguments = ""
+    else
+        printf "\nError: Argument 'store_arguments' not supported, yet.\n"
+        return 1
     endif
 
     # Addings obs cannot be put into a separate function (added obs would get lost)
@@ -100,6 +103,7 @@ function scalar valid_matrix (const matrix m)
     endif
 end function
 
+
 function scalar valid_filename (const string filename)
     if strlen(filename) == 0
         printf "\nError: Invalid filename.\n"
@@ -112,7 +116,6 @@ end function
 
 # Mapping from each unique string-value to a specific integer
 # for whole series
-
 function series map_uniq_str_to_int_series (const strings S)
     /* Get unique string-values of array. Map each unique string value
     in S to a unique integer and store vector as series. */
@@ -136,7 +139,6 @@ end function
 
 
 
-# TODO: Will be part of extra.gfn in v0.51
 function matrix strpos (const strings S "Array of strings",
                         const string str "String being searched for in S",
                         const bool print_warnings[1] "Print eventual warnings")
