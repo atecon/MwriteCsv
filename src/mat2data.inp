@@ -1,6 +1,6 @@
-function scalar Mat2Datafile (const matrix m,
-                              string filename "Path+filename",
-                              const string store_arguments[null] "(untested) Options for 'store' command")
+function scalar mat2data (const matrix m,
+                          string filename "Path+filename",
+                          const string store_arguments[null] "(untested) Options for 'store' command")
 
     if !valid_filename(filename) || !valid_matrix(m)
         return 1
@@ -114,18 +114,19 @@ function scalar valid_filename (const string filename)
 end function
 
 
-# Mapping from each unique string-value to a specific integer
-# for whole series
 function series map_uniq_str_to_int_series (const strings S)
 /* Get unique string-values of array. Map each unique string value
     in S to a unique integer and store vector as series. */
 
     strings suniq = struniq(S)
     matrix m = NA * ones(1, $tmax)
-    series s = -1
+    series s = NA
 
     if nelem(S) != $tmax
-        printf "\nError: Dimension of 'row_labels' must equal number of observations .\n"
+        printf "\nError: Dimension of 'row_labels' must equal number of observations.\n"
+        return s
+    elif nelem(suniq) == 0
+        printf "\nError: At least one empty string in 'row labels' of matrix.\n"
         return s
     endif
 
@@ -136,51 +137,3 @@ function series map_uniq_str_to_int_series (const strings S)
 
     return s
 end function
-
-
-
-/*
-   function matrix strpos (const strings S "Array of strings",
-   const string str "String being searched for in S",
-   const bool print_warnings[1] "Print eventual warnings")
-   # Returns the positional entries of string in S in a column vector
-   # if S contains string, 0 otherwise.
-
-   if nelem(S) == 0
-   if print_warnings
-   printf "Warning: String array '%s' is empty.\n", argname(S)
-   endif
-   return {0}
-   endif
-
-   matrix ret = {}
-   loop i=1..nelem(S) -q
-   if S[i] == str
-   ret |= $i
-   endif
-   endloop
-
-   if rows(ret) > 0
-   return ret
-   else
-   return {0}
-   endif
-   end function
-*/
-
-/*
-   function strings struniq (const strings S)
-   # Returns an array containing the distinct elements
-   #of S not sorted but in their order of appearance.
-
-   strings suniq = defarray(S[1])
-
-   loop i=2..nelem(S) -q
-   if strpos(suniq, S[i]) == 0		# TODO: What about empty strings?
-   suniq += S[i]
-   endif
-   endloop
-
-   return suniq
-   end function
-*/

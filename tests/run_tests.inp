@@ -1,13 +1,16 @@
 set verbose off
 clear
 
-string WD = "/home/at/git/MwriteCsv"		# TODO: rename
+string WD = "/home/at/git/mat2data"		# TODO: rename
 scalar N_ROWS = 3
 scalar N_COLS = 3
 string FILENAME = "foo.gdt"		# dummy file
 
 set workdir @WD
-include "./src/MwriteCsv.inp" --force		# TODO: rename
+include "./src/mat2data.inp" --force		# TODO: rename
+
+include string_utils.gfn
+
 
 nulldata 3 --preserve			# function requires some dataset
 
@@ -63,10 +66,9 @@ if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 
 endif
 
 strings S = defarray("R1", "R2", "R1", "R4")
-if sum(map_uniq_str_to_int_series(S)) != -1*$tmax
+if sum(ok(map_uniq_str_to_int_series(S))) != 0
     stop
 endif
-
 
 strings S = defarray("R1", "R2", "R3")
 series y = map_uniq_str_to_int_series(S)
@@ -86,8 +88,7 @@ delete y
 
 strings S = defarray("R1", "R2", "")
 series y = map_uniq_str_to_int_series(S)
-stringify(y, S)
-if y[1] != "R1" || y[2] != "R2" || y[3] != ""
+if sum(ok(y)) != 0
     stop
 endif
 
@@ -181,7 +182,7 @@ endif
 
 
 
-print "Start with MwriteCsv()"
+print "Start with mat2data()"
 matrix m = mshape(seq(1,N_ROWS*N_COLS), N_ROWS, N_COLS)
 cnameset(m, "A B C")
 strings rnam = array(N_ROWS)
@@ -191,7 +192,7 @@ endloop
 rnameset(m, rnam)
 m[3,1] = NA
 
-scalar ret = MwriteCsv(m, FILENAME)
+scalar ret = mat2data(m, FILENAME)
 if ret != 0
     stop
 endif
@@ -252,7 +253,7 @@ endif
 
 # without column labels
 cnameset(m, "")
-scalar ret = MwriteCsv(m, FILENAME)
+scalar ret = mat2data(m, FILENAME)
 if ret != 0
     stop
 endif
@@ -314,7 +315,7 @@ endif
 cnameset(m, "A B C")
 rnameset(m, "")
 
-scalar ret = Mat2Datafile(m, FILENAME)
+scalar ret = mat2data(m, FILENAME)
 if ret != 0
     stop
 endif

@@ -1,12 +1,12 @@
 author = Artur Tarassow
 email = atecon@posteo.de
 version = 0.5
-date = 2019-12-17
+date = 2019-12-18
 description = Write matrix as dataset to some file (e.g. csv, gdt)
 tags = C81
 min-version = 2018a
 data-requirement = no-data-ok
-public = Mat2Datafile
+public = mat2data
 depends = string_utils
-help = MwriteCsv_help.txt
-sample-script = MwriteCsv_sample.inp
+help = mat2data_help.txt
+sample-script = mat2data_sample.inp

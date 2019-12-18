@@ -1,4 +1,4 @@
-PKG =  MwriteCsv
+PKG = mat2data
 
 $(PKG).gfn: $(PKG).inp $(PKG).spec $(PKG)_help.txt $(PKG)_sample.inp
 	gretlcli --makepkg $(PKG).inp
