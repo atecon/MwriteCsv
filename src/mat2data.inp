@@ -1,11 +1,14 @@
 function scalar mat2data (const matrix m,
                           string filename "Path+filename",
                           const string store_arguments[null] "(untested) Options for 'store' command")
-
+    
+    if $datatype == 0
+        printf "\nError: No dataset exists.\n"
+        return 1
+    endif
     if !valid_filename(filename) || !valid_matrix(m)
         return 1
     endif
-
     if !exists(store_arguments)
         string store_arguments = ""
     else
@@ -14,12 +17,12 @@ function scalar mat2data (const matrix m,
     endif
 
     # Addings obs cannot be put into a separate function (added obs would get lost)
-    scalar Tlocal = rows(m)
-    if Tlocal <= $tmax
-        smpl 1 Tlocal
+    scalar T = rows(m)
+    if T <= $tmax
+        smpl 1 T
     else
         smpl 1 $tmax
-        scalar Tadd = Tlocal - $nobs
+        scalar Tadd = T - $nobs
         dataset addobs Tadd
     endif
 

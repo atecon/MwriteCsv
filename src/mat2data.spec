@@ -5,7 +5,6 @@ date = 2019-12-18
 description = Write matrix as dataset to some file (e.g. csv, gdt)
 tags = C81
 min-version = 2018a
-data-requirement = no-data-ok
 public = mat2data
 depends = string_utils
 help = mat2data_help.txt

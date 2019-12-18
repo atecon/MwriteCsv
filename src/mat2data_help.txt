@@ -9,6 +9,8 @@ If a file filename already exists at the target directory, it will be overwritte
 
 The output file will be written in the currently set "workdir", unless "filename" contains a full path specification.
 
+Note: The package only works if an data set is opened (either via the 'open' or 'nulldata' commands).
+
 Output:		integer
 Arguments:	X (matrix)
 			filename (string)
