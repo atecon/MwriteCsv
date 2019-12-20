@@ -1,0 +1,24 @@
+Written by Artur Tarassow (please ask questions and report bugs on the gretl mailing list if possible).
+
+Source code and test script(s) can be found here:
+https://github.com/atecon/mat2data
+
+Stores matrix X to some data file named 'filename'. In case matrix X comprises column labels, these will be treated as header labels. Additionally, if matrix X comprises row labels, these will be added as a string-valued column.
+
+The output is archived in the format as specified in 'filename'. All file-formats as supported by gretl can be chosen, e.g. csv, txt, gdt or gdtb. If no format-extension is provided, '.gdt' is added automatically.
+
+The output file will be written in the currently set "workdir", unless "filename" contains a full path specification. If a file filename already exists at the target directory, it will be overwritten.
+
+Note: The package only works if an data set is opened (either via the 'open' or 'nulldata' commands).
+
+Output:		integer
+Arguments:	X (matrix)
+			filename (string)
+Return:
+Returns a zero integer on successful completion, otherwise 1.
+-----------------------------------------------------------------------
+
+
+Changelog:
+- v0.5, December 2019:
+    + initial release

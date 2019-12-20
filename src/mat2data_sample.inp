@@ -1,7 +1,9 @@
 set verbose off
 clear
 
-include MwriteCsv.gfn
+include mat2data.gfn --force
+
+nulldata 3				# some dataset must be active
 
 scalar n_rows = 5
 matrix m = mnormal(n_rows, 5)
@@ -13,7 +15,7 @@ endloop
 rnameset(m, rnam)
 m[1,1] = NA
 
-MwriteCsv(m, "foo.csv")
+mat2data(m, "foo.csv")
 
 eval readfile("foo.csv")
 open "foo.csv" -p -q

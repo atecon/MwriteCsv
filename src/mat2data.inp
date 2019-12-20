@@ -1,0 +1,142 @@
+function scalar mat2data (const matrix m,
+                          string filename "Path+filename",
+                          const string store_arguments[null] "(untested) Options for 'store' command")
+    
+    if $datatype == 0
+        printf "\nError: No dataset exists.\n"
+        return 1
+    endif
+    if !valid_filename(filename) || !valid_matrix(m)
+        return 1
+    endif
+    if !exists(store_arguments)
+        string store_arguments = ""
+    else
+        printf "\nError: Argument 'store_arguments' not supported, yet.\n"
+        return 1
+    endif
+
+    # Addings obs cannot be put into a separate function (added obs would get lost)
+    scalar T = rows(m)
+    if T <= $tmax
+        smpl 1 T
+    else
+        smpl 1 $tmax
+        scalar Tadd = T - $nobs
+        dataset addobs Tadd
+    endif
+
+    list L = matrix_to_list(m, cnameget(m), rnameget(m))
+    scalar err = store_list(L, filename, store_arguments)
+
+    return err
+end function
+
+
+function scalar store_list (const list L,
+                            const string filename,
+                            const string store_arguments)
+    /* Store list of series. */
+
+    catch store "@filename" L @store_arguments
+    if $error
+        printf "\nError: Could not store file '%s'.\n", filename
+        return 1
+    else
+        return 0
+    endif
+end function
+
+
+function list matrix_to_list (const matrix m,
+                              const strings column_labels,
+                              const strings row_labels)
+    /* Cast colum-vectors as series and put series to a list.
+       Name series accordingly to eventually existing column-labels.
+       In case row-labels exist, put another string-values series to
+    the list. */
+
+    list L = null
+
+    loop i=1..cols(m) -q
+        list L += genseries(get_column_name(column_labels, $i), m[,i])
+    endloop
+
+    if nelem(row_labels) > 0
+        string vname = "row_label"
+        series @vname
+        list L += genseries(vname, get_str_valued_series(row_labels, &@vname))
+    endif
+
+    return L
+end function
+
+
+function series get_str_valued_series (const strings S,
+                                       series *ret)
+    /* Generate string-valued series comprising row labels. */
+
+    series y = map_uniq_str_to_int_series(S)
+    series ret = y		# see manual sec. 15.4: "ret" must be assigned by y!
+    stringify(ret, S)
+
+    return ret
+end function
+
+
+function string get_column_name (const strings column_labels,
+                                 const int series_id)
+    /* Either retrieve matrix' column labels, or
+    generate a new series name. */
+
+    if nelem(column_labels) > 0
+        return sprintf("%s", column_labels[series_id])
+    else
+        return sprintf("v%d", series_id)
+    endif
+end function
+
+
+function scalar valid_matrix (const matrix m)
+    if rows(m) == 0 || cols(m) == 0
+        printf "\nError: Empty matrix provided.\n"
+        return 0
+    else
+        return 1
+    endif
+end function
+
+
+function scalar valid_filename (const string filename)
+    if strlen(filename) == 0
+        printf "\nError: Invalid filename.\n"
+        return 0
+    else
+        return 1
+    endif
+end function
+
+
+function series map_uniq_str_to_int_series (const strings S)
+/* Get unique string-values of array. Map each unique string value
+    in S to a unique integer and store vector as series. */
+
+    strings suniq = struniq(S)
+    matrix m = NA * ones(1, $tmax)
+    series s = NA
+
+    if nelem(S) != $tmax
+        printf "\nError: Dimension of 'row_labels' must equal number of observations.\n"
+        return s
+    elif nelem(suniq) == 0
+        printf "\nError: At least one empty string in 'row labels' of matrix.\n"
+        return s
+    endif
+
+    loop i=1..$tmax -q
+        m[i] = strpos(suniq, S[i])
+    endloop
+    series s = m
+
+    return s
+end function
