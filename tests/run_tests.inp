@@ -1,14 +1,15 @@
 set verbose off
 clear
 
-string WD = "/home/at/git/mat2data"		# TODO: rename
+
 scalar N_ROWS = 3
 scalar N_COLS = 3
 string FILENAME = "foo.gdt"		# dummy file
 
-set workdir @WD
-include "./src/mat2data.inp" --force		# TODO: rename
+include "./src/mat2data.inp" --force
 
+# external packages needed
+include assertion.gfn
 include string_utils.gfn
 
 
