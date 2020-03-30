@@ -20,5 +20,7 @@ Returns a zero integer on successful completion, otherwise 1.
 
 
 Changelog:
+- v0.6, March 2020:
+	+ handle previously sub-sampled data sets
 - v0.5, December 2019:
     + initial release

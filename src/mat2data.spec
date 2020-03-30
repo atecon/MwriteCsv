@@ -1,7 +1,7 @@
 author = Artur Tarassow
 email = atecon@posteo.de
-version = 0.5
-date = 2019-12-18
+version = 0.6
+date = 2020-03-30
 description = Write matrix as dataset to some file (e.g. csv, gdt)
 tags = C81
 min-version = 2018a

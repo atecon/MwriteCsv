@@ -2,8 +2,8 @@
 <gretl-functions>
 <gretl-function-package name="mat2data" minver="2018a">
 <author email="atecon@posteo.de">Artur Tarassow</author>
-<version>0.5</version>
-<date>2019-12-18</date>
+<version>0.6</version>
+<date>2020-03-30</date>
 <description>Write matrix as dataset to some file (e.g. csv, gdt)</description>
 <tags>C81</tags>
 <help>
@@ -29,6 +29,8 @@ Returns a zero integer on successful completion, otherwise 1.
 
 
 Changelog:
+- v0.6, March 2020:
+	+ handle previously sub-sampled data sets
 - v0.5, December 2019:
     + initial release
 </help>
@@ -60,7 +62,11 @@ endif
 # Addings obs cannot be put into a separate function (added obs would get lost)
 scalar T = rows(m)
 if T &lt;= $tmax
-  smpl 1 T
+  catch smpl 1 T
+  if $error
+    series observation = seq(1,$nobs)'
+    smpl observation &lt;= T --restrict
+  endif
 else
   smpl 1 $tmax
   scalar Tadd = T - $nobs
