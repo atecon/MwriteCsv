@@ -19,7 +19,11 @@ function scalar mat2data (const matrix m,
     # Addings obs cannot be put into a separate function (added obs would get lost)
     scalar T = rows(m)
     if T <= $tmax
-        smpl 1 T
+        catch smpl 1 T
+        if $error
+            series observation = seq(1,$nobs)'
+            smpl observation <= T --restrict
+        endif
     else
         smpl 1 $tmax
         scalar Tadd = T - $nobs
