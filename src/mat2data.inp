@@ -138,7 +138,7 @@ function series map_uniq_str_to_int_series (const strings S)
     endif
 
     loop i=1..$tmax -q
-        m[i] = strpos(suniq, S[i])
+        m[i] = strpos(suniq, S[i], 0)
     endloop
     series s = m
 
