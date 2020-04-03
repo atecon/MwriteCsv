@@ -1,7 +1,7 @@
 set verbose off
 clear
 
-include mat2data.gfn --force
+include mat2data.gfn
 
 nulldata 3				# some dataset must be active
 
