@@ -1,75 +1,143 @@
-set verbose off
 clear
-
-
-scalar N_ROWS = 3
-scalar N_COLS = 3
-string FILENAME = "foo.gdt"		# dummy file
+set verbose off
+set assert stop
 
 include "./src/mat2data.inp" --force
-
 # external packages needed
 include assertion.gfn
 include string_utils.gfn
 
 
-nulldata 3 --preserve			# function requires some dataset
+# PARAMETERS
+scalar N_ROWS = 3
+scalar N_COLS = 3
+string FILENAME = "foo.gdt"		# dummy file
 
 
-print "Start with valid_matrix()"
-if valid_matrix(zeros(0,0)) != 0
-    stop
-endif
-
-if valid_matrix(zeros(1,1)) != 1
-    stop
-endif
+# nulldata 3 --preserve			# function requires some dataset
 
 
+bundles Parameters = null
+Parameters = Parameters + _(value = zeros(0, 0), expected = FALSE)
+Parameters = Parameters + _(value = zeros(1, 1), expected = TRUE)
+function void test_valid_matrix (const bundles P)
+    print "Start testing valid_matrix()."
 
-print "Start with valid_filename()"
-if valid_filename("") != 0
-    stop
-endif
+    loop foreach i P
+        # Given + When
+        scalar actual = valid_matrix(P[i].value)
 
-if valid_filename("___/") != 1
-    stop
-endif
-
-
-
-print "Start with get_column_name()"
-strings S = defarray("A", "B", "C")
-if get_column_name(S, 1) != "A" || get_column_name(S, 2) != "B" \
-  || get_column_name(S, 3) != "C"
-    stop
-endif
-
-strings S = array(0)
-if get_column_name(S, 1) != "v1" || get_column_name(S, 2) != "v2" \
-  || get_column_name(S, 3) != "v3"
-    stop
-endif
+        # Then
+        assert(actual == P[i].expected)
+    endloop
+end function
+test_valid_matrix(Parameters)
 
 
+bundles Parameters = null
+Parameters = Parameters + _(value = "", expected = FALSE)
+Parameters = Parameters + _(value = "___/", expected = TRUE)
+function void test_valid_filename (const bundles P)
+    print "Start testing valid_filename()."
 
-print "Start with map_uniq_str_to_int_series()"
-strings S = defarray("R1", "R2", "R3")
-if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 2 \
-  || map_uniq_str_to_int_series(S)[3] != 3
-    stop
-endif
+    loop foreach i P
+        # Given + When
+        scalar actual = valid_filename(P[i].value)
 
-strings S = defarray("R1", "R2", "R1")
-if map_uniq_str_to_int_series(S)[1] != 1 || map_uniq_str_to_int_series(S)[2] != 2 \
-  || map_uniq_str_to_int_series(S)[1] != 1
-    stop
-endif
+        # Then
+        assert(actual == P[i].expected)
+    endloop
+end function
+test_valid_filename(Parameters)
 
-strings S = defarray("R1", "R2", "R1", "R4")
-if sum(ok(map_uniq_str_to_int_series(S))) != 0
-    stop
-endif
+
+bundles Parameters = null
+/* Fails currently -- probably a bug
+Parameters = Parameters + _(value = defarray("A", "B", "C"),\
+                            expected = defarray("A", "B", "C"))
+
+Parameters = Parameters + _(value = array(0),\
+                            expected = defarray("v1", "v2", "v3"))
+*/
+input = defarray("A", "B", "C")
+Parameters = Parameters + _(value = input,\
+                            expected = input)
+strings input = array(0)
+strings input_expected = defarray("v1", "v2", "v3")
+Parameters = Parameters + _(value = input,\
+                            expected = input_expected)
+function void test_get_column_name (const bundles P)
+    print "Start testing get_column_name()."
+
+    loop foreach i P
+        # Given + When
+        scalar length = nelem(P[i].value)
+        loop j=1..length
+            string actual = get_column_name(P[i].value, $j)
+            # Then
+            assert(actual == P[i].expected[j])
+        endloop
+    endloop
+end function
+test_get_column_name(Parameters)
+
+
+
+bundles Parameters = null
+strings input = defarray("R1", "R2", "R3")
+Parameters = Parameters + _(value = input, expected = {1, 2, 3}')
+strings input = defarray("R1", "R2", "R1")
+Parameters = Parameters + _(value = input, expected = {1, 2, 1}')
+strings input = defarray("R1", "R2", "R1", "R4")
+Parameters = Parameters + _(value = input, expected = mshape(NA, 4, 1))
+nulldata 3 --preserve
+function void test_map_uniq_str_to_int_series (const bundles P)
+    print "Start testing map_uniq_str_to_int_series()."
+
+    loop foreach i P
+        # Given + When
+        scalar length = nelem(P[i].value)
+        loop j=1..length
+            catch actual = map_uniq_str_to_int_series(P[i].value)[j]
+
+            # Then
+            if ok(actual) == TRUE
+                assert(actual == P[i].expected[j])
+            else
+                assert(ok(actual) == ok(P[i].expected[j]))
+            endif
+        endloop
+    endloop
+end function
+test_map_uniq_str_to_int_series(Parameters)
+
+
+bundles Parameters = null
+strings input = defarray("R1", "R2", "R3")
+Parameters = Parameters + _(value = input, expected = FALSE)
+strings input = defarray("R1", "R2", "R1")
+Parameters = Parameters + _(value = input, expected = FALSE)
+strings input = defarray("R1", "R2", "R1", "R4")
+Parameters = Parameters + _(value = input, expected = FALSE)
+nulldata 3 --preserve
+function void test_map_uniq_str_to_series (const bundles P)
+    print "Start testing map_uniq_str_to_int_series() -- stringify."
+
+    loop foreach i P
+        # Given + When
+        scalar length = nelem(P[i].value)
+        loop j=1..length
+            series y = map_uniq_str_to_int_series(P[i].value)
+            stringify(y, P[i].value)
+            scalar err_actual = $error
+
+            # Then
+            assert(actual == P[i].expected)
+        endloop
+    endloop
+end funon
+test_map_uniq_str_to_series(Parameters)
+
 
 strings S = defarray("R1", "R2", "R3")
 series y = map_uniq_str_to_int_series(S)
@@ -353,6 +421,7 @@ if sum(C) != 24
     stop
 endif
 
+
+
 printf "\nInfo: All tests passed.\n"
-
-
+quit
